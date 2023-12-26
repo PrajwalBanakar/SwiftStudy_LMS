@@ -9,34 +9,37 @@ import { useRouter } from "next/navigation";
 import {
     Form,
     FormControl,
+    FormDescription,
     FormField,
     FormItem,
     FormMessage
 } from "@/components/ui/form";
 
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Pencil } from "lucide-react";
 import { useState } from "react";
 import toast from "react-hot-toast";
+import { cn } from "@/lib/utils";
+import { Chapter, Course } from "@prisma/client";
+import { Editor } from "@/components/editor";
+import { Preview } from "@/components/preview";
+import { Checkbox } from "@/components/ui/checkbox";
 
-interface ChapterTitleFormProps {
-    initialData: {
-        title: string,
-    };
+interface ChapterAccessFormProps {
+    initialData: Chapter
     courseId: string;
     chapterId: string;
 };
 
 const formSchema = z.object({
-    title: z.string().min(1),
+    isFree: z.boolean().default(false),
 });
 
-export const ChapterTitleForm = ({
+export const ChapterAccessForm = ({
     initialData,
     courseId,
-    chapterId,
-}: ChapterTitleFormProps) => {
+    chapterId
+}: ChapterAccessFormProps) => {
 
     const [isEditing, setIsEditing] = useState(false);
 
@@ -48,7 +51,9 @@ export const ChapterTitleForm = ({
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
-        defaultValues: initialData,
+        defaultValues: {
+            isFree: Boolean(initialData?.isFree)
+        },
     });
 
     const { isSubmitting, isValid } = form.formState;
@@ -60,39 +65,55 @@ export const ChapterTitleForm = ({
             router.refresh();
         }
         catch {
-            toast.error("Unable to update chapter");
+            toast.error("Unable to update course");
         }
     }
 
     return (
         <div className="mt-6 border bg-slate-100 rounded-md p-4">
             <div className="font-medium flex items-center justify-between">
-                Chapter Title
+                Chapter access
                 <Button variant={"ghost"} onClick={toggleEdit}>
                     {isEditing? (
                         <>Cancel</>
                     ) : (
                         <>
                             <Pencil className="h-4 w-4 mr-2" />
-                            Edit Title  
+                            Edit access
                         </>
                     )}
                 </Button>
             </div>
             {!isEditing && (
-                <p className="text-sm mt-2">
-                    {initialData.title}
+                <p className={cn(
+                    "text-sm mt-2",
+                    !initialData.isFree && "text-slate-500 italic"
+                )}>
+                    {initialData.isFree ? (
+                        <>
+                        This chapter is free for preview
+                        </>
+                    ) : 
+                    (
+                        <>
+                        This chapter is not free.
+                        </>
+                    )}
                 </p>
             )}
             {isEditing && (
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 mt-4">
-                    <FormField control={form.control} name="title" render={({field}) => (
-                        <FormItem>
+                    <FormField control={form.control} name="isFree" render={({field}) => (
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
                             <FormControl>
-                                <Input disabled={isSubmitting} placeholder="e.g. 'Introduction to the course'" {...field} />
+                                <Checkbox checked={field.value} onCheckedChange={field.onChange}/>
                             </FormControl>
-                            <FormMessage />
+                            <div className="space-y-1 leading-none">
+                                <FormDescription>
+                                    Check this box if you want to make this chapter free for preview
+                                </FormDescription>
+                            </div>
                         </FormItem>
                     )}/>
                     <div className="flex items-center gap-x-2">

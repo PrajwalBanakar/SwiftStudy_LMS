@@ -14,29 +14,30 @@ import {
     FormMessage
 } from "@/components/ui/form";
 
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Pencil } from "lucide-react";
 import { useState } from "react";
 import toast from "react-hot-toast";
+import { cn } from "@/lib/utils";
+import { Chapter, Course } from "@prisma/client";
+import { Editor } from "@/components/editor";
+import { Preview } from "@/components/preview";
 
-interface ChapterTitleFormProps {
-    initialData: {
-        title: string,
-    };
+interface ChapterDescriptionFormProps {
+    initialData: Chapter
     courseId: string;
     chapterId: string;
 };
 
 const formSchema = z.object({
-    title: z.string().min(1),
+    description: z.string().min(1),
 });
 
-export const ChapterTitleForm = ({
+export const ChapterDescriptionForm = ({
     initialData,
     courseId,
-    chapterId,
-}: ChapterTitleFormProps) => {
+    chapterId
+}: ChapterDescriptionFormProps) => {
 
     const [isEditing, setIsEditing] = useState(false);
 
@@ -48,7 +49,9 @@ export const ChapterTitleForm = ({
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
-        defaultValues: initialData,
+        defaultValues: {
+            description: initialData?.description || ""
+        },
     });
 
     const { isSubmitting, isValid } = form.formState;
@@ -60,37 +63,45 @@ export const ChapterTitleForm = ({
             router.refresh();
         }
         catch {
-            toast.error("Unable to update chapter");
+            toast.error("Unable to update course");
         }
     }
 
     return (
         <div className="mt-6 border bg-slate-100 rounded-md p-4">
             <div className="font-medium flex items-center justify-between">
-                Chapter Title
+                Chapter Description
                 <Button variant={"ghost"} onClick={toggleEdit}>
                     {isEditing? (
                         <>Cancel</>
                     ) : (
                         <>
                             <Pencil className="h-4 w-4 mr-2" />
-                            Edit Title  
+                            Edit Description
                         </>
                     )}
                 </Button>
             </div>
             {!isEditing && (
-                <p className="text-sm mt-2">
-                    {initialData.title}
-                </p>
+                <div className={cn(
+                    "text-sm mt-2",
+                    !initialData.description && "text-slate-500 italic"
+                )}>
+                    {!initialData.description && "No Description"}
+                    {initialData.description && (
+                        <Preview value={initialData.description} onChange={function (value: string): void {
+                            throw new Error("Function not implemented.");
+                        } }/>
+                    )}
+                </div>
             )}
             {isEditing && (
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 mt-4">
-                    <FormField control={form.control} name="title" render={({field}) => (
+                    <FormField control={form.control} name="description" render={({field}) => (
                         <FormItem>
                             <FormControl>
-                                <Input disabled={isSubmitting} placeholder="e.g. 'Introduction to the course'" {...field} />
+                                <Editor {...field} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
