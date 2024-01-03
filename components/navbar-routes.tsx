@@ -31,7 +31,7 @@ export const NavbarRoutes = () => {
               Exit
             </Button>
           </Link>
-        ): (
+        ) :  (
           <Link href="/teacher/courses">
             <Button size="sm" variant="ghost">
               Teacher mode
