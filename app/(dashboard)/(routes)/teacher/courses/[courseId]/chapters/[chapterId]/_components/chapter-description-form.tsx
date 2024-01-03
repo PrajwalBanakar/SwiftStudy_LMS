@@ -89,9 +89,7 @@ export const ChapterDescriptionForm = ({
                 )}>
                     {!initialData.description && "No Description"}
                     {initialData.description && (
-                        <Preview value={initialData.description} onChange={function (value: string): void {
-                            throw new Error("Function not implemented.");
-                        } }/>
+                        <Preview value={initialData.description}/>
                     )}
                 </div>
             )}
